@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Asset Lab · 游戏资产拆解</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+    :root { --bg:#0b0e12; --panel:#12171d; --panel2:#171e26; --line:#29323c; --text:#eef2f4; --muted:#8c99a5; --lime:#c8f36b; --cyan:#6be7dc; --amber:#ffc56b; --pink:#ef91c5; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--text); background:radial-gradient(1000px 600px at 75% -10%,#26353b 0%,transparent 60%),var(--bg); font-family:'IBM Plex Sans',system-ui,sans-serif; min-height:100vh; }
+    body:before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.12; background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px); background-size:32px 32px; mask-image:linear-gradient(to bottom,black,transparent 85%); }
+    .app { display:grid; grid-template-columns:250px 1fr; min-height:100vh; position:relative; }
+    aside { border-right:1px solid var(--line); padding:26px 18px; background:rgba(10,13,17,.86); backdrop-filter:blur(18px); display:flex; flex-direction:column; gap:26px; }
+    .brand { display:flex; gap:11px; align-items:center; letter-spacing:.08em; font-size:13px; font-weight:700; }
+    .brand-mark { width:30px; height:30px; border:1px solid var(--lime); color:var(--lime); display:grid; place-items:center; font-family:'DM Mono'; font-size:12px; transform:rotate(-8deg); box-shadow:4px 4px 0 rgba(200,243,107,.15); }
+    .eyebrow { color:var(--muted); font:11px 'DM Mono'; letter-spacing:.13em; text-transform:uppercase; }
+    nav { display:grid; gap:5px; }
+    nav button { border:0; text-align:left; padding:12px 13px; border-radius:8px; background:transparent; color:var(--muted); font:500 13px 'IBM Plex Sans'; cursor:pointer; }
+    nav button.active, nav button:hover { color:var(--text); background:var(--panel2); }
+    nav button.active:before { content:""; display:inline-block; width:5px; height:5px; background:var(--lime); border-radius:50%; margin:0 10px 2px 0; }
+    .side-card { margin-top:auto; border:1px solid var(--line); background:linear-gradient(140deg,rgba(200,243,107,.08),rgba(107,231,220,.03)); border-radius:10px; padding:14px; }
+    .side-card p { margin:9px 0 0; font-size:12px; line-height:1.6; color:var(--muted); }
+    main { padding:28px 34px 36px; max-width:1600px; width:100%; margin:auto; }
+    header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:26px; }
+    h1 { font-size:30px; letter-spacing:-.04em; margin:4px 0 5px; font-weight:600; }
+    .sub { margin:0; color:var(--muted); font-size:13px; }
+    .header-actions { display:flex; gap:10px; align-items:center; }
+    .status { border:1px solid #38534c; color:var(--cyan); background:rgba(107,231,220,.06); padding:8px 11px; border-radius:20px; font:11px 'DM Mono'; }
+    .btn { border:1px solid var(--line); color:var(--text); background:var(--panel); border-radius:7px; padding:10px 14px; cursor:pointer; font:600 12px 'IBM Plex Sans'; transition:.2s; }
+    .btn:hover { border-color:#60717f; transform:translateY(-1px); }
+    .btn.primary { border-color:var(--lime); color:#11160c; background:var(--lime); }
+    .layout { display:grid; grid-template-columns:230px minmax(420px,1fr) 310px; gap:16px; align-items:start; }
+    .panel { border:1px solid var(--line); background:rgba(18,23,29,.9); border-radius:11px; overflow:hidden; }
+    .view-panel { display:none; }
+    .view-panel.active { display:block; animation:rise .25s ease both; }
+    @keyframes rise { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    .view-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:16px; }
+    .stat-card { border:1px solid var(--line); border-radius:8px; background:#10161b; padding:15px; }
+    .stat-card strong { display:block; font-size:24px; margin:8px 0 3px; color:var(--lime); }
+    .stat-card span { color:var(--muted); font-size:11px; }
+    .queue-row,.model-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid var(--line); font-size:12px; }
+    .queue-row:last-child,.model-row:last-child { border-bottom:0; }
+    .badge { border:1px solid #38534c; color:var(--cyan); border-radius:12px; padding:4px 8px; font:10px 'DM Mono'; }
+    .badge.idle { color:var(--muted); border-color:var(--line); }
+    .panel-body, .panel-head, .drop, .field, select { min-width:0; }
+    .panel-head { display:flex; justify-content:space-between; align-items:center; padding:14px 15px; border-bottom:1px solid var(--line); }
+    .panel-title { font-size:12px; font-weight:600; letter-spacing:.04em; }
+    .panel-body { padding:15px; }
+    .drop { display:block; border:1px dashed #50606b; border-radius:8px; padding:18px 13px; min-height:92px; text-align:center; color:var(--muted); cursor:pointer; transition:.2s; overflow:hidden; }
+    .drop:hover,.drop.drag { border-color:var(--lime); background:rgba(200,243,107,.05); color:var(--text); }
+    .drop strong { display:block; color:var(--text); font-size:13px; margin-bottom:6px; }
+    .drop span { font-size:11px; line-height:1.5; }
+    input[type=file] { display:none; }
+    .field { margin-top:16px; }
+    .field label { display:flex; justify-content:space-between; color:var(--muted); font:11px 'DM Mono'; margin-bottom:8px; }
+    select { width:100%; color:var(--text); background:#0c1116; border:1px solid var(--line); border-radius:6px; padding:9px; outline:none; }
+    .checks { display:grid; gap:8px; }
+    .check { display:flex; gap:8px; align-items:center; color:#c6d0d7; font-size:12px; }
+    .check input { accent-color:var(--lime); }
+    .canvas { min-height:630px; display:flex; flex-direction:column; }
+    .canvas-head { display:flex; justify-content:space-between; padding:12px 15px; border-bottom:1px solid var(--line); }
+    .canvas-meta { display:flex; gap:15px; color:var(--muted); font:11px 'DM Mono'; }
+    .stage { margin:15px; flex:1; min-height:480px; position:relative; display:grid; place-items:center; overflow:hidden; border-radius:8px; background:radial-gradient(circle at 50% 35%,#3b4a51 0,#202a32 45%,#11171c 100%); }
+    .stage:after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(120deg,transparent 30%,rgba(200,243,107,.06),transparent 70%); mix-blend-mode:screen; }
+    #preview { max-width:94%; max-height:530px; object-fit:contain; display:none; position:relative; z-index:1; filter:drop-shadow(0 18px 30px rgba(0,0,0,.45)); }
+    .placeholder { text-align:center; color:#8795a0; z-index:1; }
+    .placeholder .glyph { font:46px 'DM Mono'; color:var(--lime); opacity:.75; }
+    .placeholder p { margin:8px 0 0; font-size:12px; }
+    .scan { position:absolute; left:0; right:0; height:2px; background:var(--lime); box-shadow:0 0 18px var(--lime); top:-5px; display:none; z-index:2; animation:scan 1.7s ease-in-out infinite; }
+    @keyframes scan { 0%{top:0;opacity:0} 15%{opacity:1} 85%{opacity:1} 100%{top:100%;opacity:0} }
+    .canvas-foot { display:flex; justify-content:space-between; align-items:center; padding:0 15px 15px; color:var(--muted); font-size:11px; }
+    .progress { width:130px; height:4px; background:#27323a; border-radius:8px; overflow:hidden; display:none; }
+    .progress i { display:block; height:100%; width:0; background:var(--lime); transition:.25s; }
+    .tabs { display:flex; gap:5px; padding:10px 12px; border-bottom:1px solid var(--line); overflow:auto; }
+    .tab { white-space:nowrap; color:var(--muted); border:0; background:transparent; font-size:11px; padding:6px 8px; border-radius:5px; cursor:pointer; }
+    .tab.active,.tab:hover { color:var(--text); background:#273039; }
+    .assets { display:grid; gap:9px; padding:11px; max-height:550px; overflow:auto; }
+    .asset { display:grid; grid-template-columns:54px 1fr auto; gap:10px; align-items:center; padding:8px; border:1px solid transparent; border-radius:7px; cursor:pointer; }
+    .asset:hover { border-color:#41505b; background:#192129; }
+    .thumb { width:54px; height:45px; border-radius:5px; background:linear-gradient(135deg,#29343b,#11171b); display:grid; place-items:center; color:var(--accent,var(--lime)); font:16px 'DM Mono'; }
+    .asset-name { font-size:12px; font-weight:600; margin-bottom:3px; }
+    .asset-type { color:var(--muted); font:10px 'DM Mono'; }
+    .confidence { color:var(--accent,var(--lime)); font:10px 'DM Mono'; align-self:start; }
+    .meter { height:3px; background:#2b353d; border-radius:5px; margin-top:6px; overflow:hidden; }
+    .meter i { display:block; height:100%; background:var(--accent,var(--lime)); }
+    .empty { color:var(--muted); text-align:center; font-size:12px; padding:25px 10px; }
+    .board-modal { position:fixed; inset:0; z-index:20; display:none; padding:28px; background:rgba(5,8,11,.82); backdrop-filter:blur(12px); }
+    .board-modal.open { display:block; }
+    .board-shell { height:100%; max-width:1280px; margin:auto; border:1px solid var(--line); border-radius:12px; background:#11171c; overflow:hidden; display:flex; flex-direction:column; }
+    .board-top { display:flex; justify-content:space-between; align-items:center; padding:15px 18px; border-bottom:1px solid var(--line); }
+    .board-grid { display:grid; grid-template-columns:minmax(280px,1fr) 1.4fr; gap:16px; padding:16px; overflow:auto; min-height:0; }
+    .board-original { background:#0b1014; border:1px solid var(--line); border-radius:8px; padding:10px; display:flex; align-items:center; justify-content:center; min-height:420px; }
+    .board-original img { max-width:100%; max-height:68vh; object-fit:contain; }
+    .board-assets { display:grid; grid-template-columns:repeat(3,minmax(120px,1fr)); gap:10px; align-content:start; }
+    .board-card { border:1px solid var(--line); background:#0d1318; border-radius:7px; padding:8px; }
+    .board-card canvas { width:100%; height:125px; object-fit:contain; background:repeating-conic-gradient(#202a30 0 25%,#182127 0 50%) 50%/12px 12px; border-radius:4px; }
+    .board-card b { display:block; font-size:11px; margin-top:7px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .board-card span { display:block; color:var(--muted); font:10px 'DM Mono'; margin-top:3px; }
+    .enhance { margin-top:16px; }
+    .mode { display:grid; gap:6px; }
+    .mode button { border:1px solid var(--line); color:var(--muted); background:#0f1419; border-radius:6px; padding:9px; text-align:left; cursor:pointer; font-size:11px; }
+    .mode button.active { border-color:var(--lime); color:var(--text); background:rgba(200,243,107,.07); }
+    .mode button b { display:block; margin-bottom:3px; color:inherit; font-size:12px; }
+    .hint { margin-top:12px; color:var(--muted); font-size:11px; line-height:1.6; }
+    .toast { position:fixed; right:24px; bottom:24px; background:#edf6d6; color:#17200f; border-radius:7px; padding:11px 14px; font-size:12px; transform:translateY(20px); opacity:0; pointer-events:none; transition:.25s; box-shadow:0 10px 30px rgba(0,0,0,.35); }
+    .toast.show { transform:translateY(0); opacity:1; }
+    @media (max-width:1100px){ .layout{grid-template-columns:210px 1fr;} .right{grid-column:1/-1; display:grid; grid-template-columns:1fr 1fr; gap:16px;} .enhance{margin-top:0;} }
+    @media (max-width:720px){ .app{grid-template-columns:1fr;} aside{display:none;} main{padding:20px 14px;} header{display:block;} .header-actions{margin-top:14px;} .layout{grid-template-columns:1fr;} .right{display:block;} .canvas{min-height:520px;} }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="brand"><div class="brand-mark">AL</div><span>ASSET LAB</span></div>
+      <div class="eyebrow">workspace / 01</div>
+      <nav>
+        <button class="active" data-view="workspace">拆解工作台</button>
+        <button data-view="library">项目资产库</button>
+        <button data-view="queue">批处理队列</button>
+        <button data-view="models">模型与风格</button>
+      </nav>
+      <div class="side-card">
+        <div class="eyebrow">pipeline status</div>
+        <p><span style="color:var(--lime)">●</span> 本地推理接口已预留<br><span style="color:var(--cyan)">●</span> Grounding DINO · SAM2<br><span style="color:var(--amber)">●</span> img2img 增强模块</p>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <div><div class="eyebrow">game art intelligence</div><h1 id="titleText">游戏资产拆解台</h1><p class="sub" id="subtitleText">识别、分层、抠图，再决定是否让 AI 补全。</p></div>
+        <div class="header-actions"><div class="status">● LOCAL INFERENCE READY</div><button class="btn primary" id="exportBtn">导出资产包</button></div>
+      </header>
+      <section class="layout">
+        <div class="panel">
+          <div class="panel-head"><span class="panel-title">输入与策略</span><span class="eyebrow">01</span></div>
+          <div class="panel-body">
+            <label class="drop" id="drop"><input id="file" type="file" accept="image/png,image/jpeg,image/webp"/><strong>拖入参考图</strong><span>角色设定、截图、武器或场景<br>支持 PNG / JPG / WebP</span></label>
+            <div class="field"><label><span>识别目标</span><span>OPEN VOCAB</span></label><select id="target"><option>角色与装备</option><option>服装与饰品</option><option>场景与道具</option><option>全部对象</option></select></div>
+            <div class="field"><label><span>输出格式</span><span>EXPORT</span></label><select id="format"><option>透明 PNG + JSON</option><option>WebP 图集 + JSON</option><option>Unity 资源包</option><option>Unreal 资源包</option></select></div>
+            <div class="field"><label><span>后处理</span><span>OPTIONAL</span></label><div class="checks"><label class="check"><input type="checkbox" checked/>边缘精修</label><label class="check"><input type="checkbox" checked/>自动去阴影</label><label class="check"><input type="checkbox"/>生成缺失视角</label></div></div>
+            <button class="btn primary" style="width:100%;margin-top:18px" id="analyze">开始智能拆解 <span>↗</span></button>
+          </div>
+        </div>
+        <div class="panel canvas">
+          <div class="canvas-head"><span class="panel-title">原图预览 / 遮罩叠加</span><div class="canvas-meta"><span id="resolution">—</span><span id="objectCount">0 OBJECTS</span></div></div>
+          <div class="stage" id="stage"><div class="scan" id="scan"></div><img id="preview" alt="上传图片预览"/><div class="placeholder" id="placeholder"><div class="glyph">＋</div><p>上传一张图片，开始建立资产图谱</p></div></div>
+          <div class="canvas-foot"><span id="stageHint">等待输入 · 可先使用示例策略预览</span><div class="progress" id="progress"><i></i></div><div style="display:flex;gap:7px"><button class="btn" id="downloadBtn" style="display:none">下载生成图</button><button class="btn" id="clearBtn">清空</button></div></div>
+        </div>
+        <div class="right">
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">识别资产</span><div style="display:flex;gap:8px;align-items:center"><button class="btn" id="segmentBtn" style="padding:6px 8px;font-size:10px">生成透明资产</button><button class="btn" id="boardBtn" style="padding:6px 8px;font-size:10px">查看拆解板</button><span class="eyebrow" id="assetLabel">0 items</span></div></div>
+            <div class="tabs" id="tabs"><button class="tab active" data-filter="全部">全部</button><button class="tab" data-filter="角色">角色</button><button class="tab" data-filter="装备">装备</button><button class="tab" data-filter="服装">服装</button><button class="tab" data-filter="场景">场景</button></div>
+            <div class="assets" id="assets"><div class="empty">分析完成后，资产会按类别出现在这里</div></div>
+          </div>
+          <div class="panel enhance">
+            <div class="panel-head"><span class="panel-title">AI 增强 / img2img</span><span class="eyebrow">OPTIONAL</span></div>
+            <div class="panel-body"><div class="mode" id="modes"><button class="active" data-mode="保真增强"><b>保真增强</b>修边、去背景、放大细节</button><button data-mode="局部补全"><b>局部补全</b>补齐遮挡区域，保持原设计</button><button data-mode="创意变体"><b>创意变体</b>生成颜色、材质和装备变化</button></div><button class="btn" id="generate" style="width:100%;margin-top:12px">生成增强预览</button><p class="hint">建议先完成拆解，再对单个资产启用增强。原图始终保留，可回滚。</p></div>
+          </div>
+        </div>
+      </section>
+      <section class="panel view-panel" id="libraryView">
+        <div class="panel-head"><span class="panel-title">项目资产库</span><span class="eyebrow">LIBRARY</span></div>
+        <div class="view-grid"><div class="stat-card"><div class="eyebrow">TOTAL ASSETS</div><strong id="libTotal">0</strong><span>已解析资产</span></div><div class="stat-card"><div class="eyebrow">CHARACTERS</div><strong id="libCharacters">0</strong><span>角色与生物</span></div><div class="stat-card"><div class="eyebrow">EXPORT READY</div><strong id="libReady">0</strong><span>可导出文件</span></div></div>
+        <div id="libraryRows"><div class="empty">完成一次拆解后，资产会自动归档到这里</div></div>
+      </section>
+      <section class="panel view-panel" id="queueView">
+        <div class="panel-head"><span class="panel-title">批处理队列</span><span class="eyebrow">QUEUE</span></div>
+        <div class="queue-row"><div><b>当前工作区</b><div class="asset-type">实时识图与资产归类</div></div><span class="badge">READY</span></div>
+        <div class="queue-row"><div><b>SAM2 像素分割</b><div class="asset-type">等待接入本地 GPU 推理</div></div><span class="badge idle">PLANNED</span></div>
+        <div class="queue-row"><div><b>img2img 保真编辑</b><div class="asset-type">按需生成，不自动覆盖原图</div></div><span class="badge idle">ON DEMAND</span></div>
+      </section>
+      <section class="panel view-panel" id="modelsView">
+        <div class="panel-head"><span class="panel-title">模型与风格</span><span class="eyebrow">MODELS</span></div>
+        <div class="model-row"><div><b>GPT‑5.6 Vision</b><div class="asset-type">识图、命名、部件关系</div></div><span class="badge">CONNECTED</span></div>
+        <div class="model-row"><div><b>gpt-image-2</b><div class="asset-type">原图携带式编辑 / img2img</div></div><span class="badge">CONNECTED</span></div>
+        <div class="model-row"><div><b>Grounding DINO + SAM2</b><div class="asset-type">目标框与像素遮罩</div></div><span class="badge idle">NEXT</span></div>
+        <div class="panel-body"><div class="field"><label><span>当前风格锁定</span><span>STYLE LOCK</span></label><select><option>保留原图设计（推荐）</option><option>暗黑东方奇幻</option><option>科幻军事写实</option><option>自定义 LoRA</option></select></div></div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="board-modal" id="boardModal"><div class="board-shell"><div class="board-top"><div><div class="eyebrow">asset decomposition board</div><div class="panel-title" style="font-size:14px;margin-top:4px">游戏资产拆解板 <span style="color:var(--muted);font:10px 'DM Mono'">/ CROP PREVIEW</span></div></div><div style="display:flex;gap:8px"><button class="btn primary" id="downloadBoard">导出拆解板 PNG</button><button class="btn" id="closeBoard">关闭</button></div></div><div class="board-grid"><div class="board-original"><img id="boardOriginal" alt="原图"/></div><div class="board-assets" id="boardAssets"></div></div></div></div>
+  <script>
+    const demoAssets = [
+      {name:'人物主体', type:'角色', icon:'01', c:'#c8f36b', score:96},
+      {name:'狙击枪', type:'装备', icon:'02', c:'#6be7dc', score:94},
+      {name:'花纹衬衫', type:'服装', icon:'03', c:'#ef91c5', score:91},
+      {name:'白色短裤', type:'服装', icon:'04', c:'#ffc56b', score:89},
+      {name:'凉鞋', type:'装备', icon:'05', c:'#6be7dc', score:87},
+      {name:'手表 / 项链', type:'装备', icon:'06', c:'#ffc56b', score:82},
+      {name:'背景层', type:'场景', icon:'07', c:'#8c99a5', score:98}
+    ];
+    let currentAssets = [], currentMode='保真增强', imageName='', imageData='', generatedData='';
+    const $ = id => document.getElementById(id);
+    const toast = msg => { const t=$('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); };
+    function renderAssets(filter='全部') { const list = filter==='全部'?currentAssets:currentAssets.filter(a=>a.type===filter); $('assets').innerHTML = list.length ? list.map(a=>`<div class="asset" style="--accent:${a.c}"><div class="thumb">${a.icon}</div><div><div class="asset-name">${a.name}</div><div class="asset-type">${a.type} · 自动识别</div><div class="meter"><i style="width:${a.score}%"></i></div></div><div class="confidence">${a.score}%</div></div>`).join('') : '<div class="empty">该分类暂无识别结果</div>'; $('assetLabel').textContent = `${list.length} items`; }
+    function openBoard() { if(!currentAssets.length || !imageData){ toast('请先上传并完成智能拆解'); return; } $('boardOriginal').src=$('preview').src; const host=$('boardAssets'); host.innerHTML=''; const img=new Image(); img.onload=()=>{ currentAssets.forEach((a,i)=>{ const card=document.createElement('div'); card.className='board-card'; const media=document.createElement('img'); media.style.width='100%'; media.style.height='125px'; media.style.objectFit='contain'; media.style.background='repeating-conic-gradient(#202a30 0 25%,#182127 0 50%) 50%/12px 12px'; media.style.borderRadius='4px'; if(a.image_data){ media.src=a.image_data; } else { const canvas=document.createElement('canvas'); canvas.width=320; canvas.height=220; const ctx=canvas.getContext('2d'); const b=a.bbox||[0,0,1,1]; const sx=Math.max(0,Math.round(b[0]*img.naturalWidth)), sy=Math.max(0,Math.round(b[1]*img.naturalHeight)), sw=Math.max(1,Math.round(b[2]*img.naturalWidth)), sh=Math.max(1,Math.round(b[3]*img.naturalHeight)); const scale=Math.min(canvas.width/sw,canvas.height/sh); const dw=sw*scale, dh=sh*scale; ctx.drawImage(img,sx,sy,sw,sh,(canvas.width-dw)/2,(canvas.height-dh)/2,dw,dh); media.src=canvas.toDataURL('image/png'); } card.appendChild(media); card.insertAdjacentHTML('beforeend',`<b>${a.name}</b><span>${a.type} · ${a.score}% · ${a.image_data?'透明预览':'位置裁切预览'}</span>`); host.appendChild(card); }); $('boardModal').classList.add('open'); }; img.src=imageData; }
+    function setImage(file) { if(!file) return; imageName=file.name; const url=URL.createObjectURL(file); $('preview').src=url; $('preview').style.display='block'; $('placeholder').style.display='none'; const reader=new FileReader(); reader.onload=()=>{imageData=reader.result}; reader.readAsDataURL(file); const im=new Image(); im.onload=()=>{$('resolution').textContent=`${im.naturalWidth}×${im.naturalHeight}`}; im.src=url; $('stageHint').textContent='图片已载入 · 点击“开始智能拆解”生成资产图谱'; currentAssets=[]; $('objectCount').textContent='0 OBJECTS'; renderAssets(); }
+    // The drop zone is a <label> for the hidden file input. Let the browser's
+    // native label activation open the picker exactly once (a manual file.click
+    // here would open two dialogs in Chromium-based browsers).
+    $('file').addEventListener('change',e=>setImage(e.target.files[0]));
+    ['dragenter','dragover'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('drag')})); ['dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.remove('drag')})); $('drop').addEventListener('drop',e=>setImage(e.dataTransfer.files[0]));
+    $('analyze').addEventListener('click',async()=>{ if(!$('preview').src){ toast('请先上传一张图片'); return; } const p=$('progress'),bar=p.querySelector('i'); p.style.display='block'; bar.style.width='18%'; $('scan').style.display='block'; $('stageHint').textContent='GPT-5.6 正在识图与归类…'; const btn=$('analyze'); btn.disabled=true; try { const r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_data:imageData,target:$('target').value})}); const data=await r.json(); if(!r.ok) throw new Error(data?.error?.message||'视觉接口请求失败'); currentAssets=(data.assets||[]).map((a,i)=>({...a,icon:a.icon||String(i+1).padStart(2,'0'),c:['#c8f36b','#6be7dc','#ef91c5','#ffc56b'][i%4]})); if(!currentAssets.length) throw new Error('模型未识别到可拆分对象'); $('objectCount').textContent=`${currentAssets.length} OBJECTS`; $('stageHint').textContent='识图完成 · SAM2 像素分割接口待接入'; renderAssets(); toast(`真实识图完成：${currentAssets.length} 个资产`); } catch(e) { currentAssets=demoAssets; $('objectCount').textContent=`${currentAssets.length} OBJECTS`; $('stageHint').textContent='演示拆解完成 · 真实识图请求未成功'; renderAssets(); toast(e.message||'识图请求失败，已显示演示结果'); } finally { p.style.display='none'; $('scan').style.display='none'; btn.disabled=false; } });
+    $('tabs').addEventListener('click',e=>{ const b=e.target.closest('.tab'); if(!b)return; document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderAssets(b.dataset.filter); });
+    $('segmentBtn').addEventListener('click',async()=>{ if(!currentAssets.length||!imageData){toast('请先上传并完成智能拆解');return;} const b=$('segmentBtn'); const old=b.textContent; b.textContent='分离中…'; b.disabled=true; try { const r=await fetch('/api/segment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_data:imageData,assets:currentAssets})}); const data=await r.json(); if(!r.ok)throw new Error(data?.error?.message||'透明分离失败'); currentAssets=data.assets||currentAssets; renderAssets(); toast(`已生成 ${currentAssets.length} 个透明资产预览`); } catch(e){toast(e.message||'透明分离失败');} finally{b.textContent=old;b.disabled=false;} });
+    $('downloadBoard').addEventListener('click',async()=>{ if(!currentAssets.length||!imageData){toast('请先生成拆解板');return;} const W=1800,H=1120,canvas=document.createElement('canvas'); canvas.width=W; canvas.height=H; const ctx=canvas.getContext('2d'); ctx.fillStyle='#0b1014'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#eef2f4'; ctx.font='600 34px IBM Plex Sans, sans-serif'; ctx.fillText('游戏资产拆解板',48,58); ctx.fillStyle='#8c99a5'; ctx.font='16px DM Mono, monospace'; ctx.fillText('ASSET DECOMPOSITION BOARD  /  CROP PREVIEW',48,88); const orig=await new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.src=imageData}); const ox=48,oy=125,ow=620,oh=930; ctx.strokeStyle='#29323c';ctx.strokeRect(ox,oy,ow,oh); const os=Math.min((ow-28)/orig.width,(oh-28)/orig.height);const odw=orig.width*os,odh=orig.height*os;ctx.drawImage(orig,ox+(ow-odw)/2,oy+(oh-odh)/2,odw,odh); const cols=3,cw=350,ch=250,gx=22,gy=22,startX=720,startY=125; for(let i=0;i<currentAssets.length;i++){const a=currentAssets[i],x=startX+(i%cols)*(cw+gx),y=startY+Math.floor(i/cols)*(ch+gy);ctx.fillStyle='#111920';ctx.fillRect(x,y,cw,ch);ctx.strokeStyle='#29323c';ctx.strokeRect(x,y,cw,ch);ctx.fillStyle='#c8f36b';ctx.font='600 18px DM Mono, monospace';ctx.fillText(String(i+1).padStart(2,'0'),x+14,y+25);let src=a.image_data||imageData;const im=await new Promise(res=>{const q=new Image();q.onload=()=>res(q);q.src=src});const pad=14,iw=cw-pad*2,ih=ch-72,sc=Math.min(iw/im.width,ih/im.height),dw=im.width*sc,dh=im.height*sc;ctx.drawImage(im,x+(cw-dw)/2,y+34+(ih-dh)/2,dw,dh);ctx.fillStyle='#eef2f4';ctx.font='600 14px IBM Plex Sans, sans-serif';ctx.fillText((a.name||'未命名资产').slice(0,18),x+14,y+ch-27);ctx.fillStyle='#8c99a5';ctx.font='11px DM Mono, monospace';ctx.fillText(`${a.type||'资产'} · ${a.score||0}%`,x+14,y+ch-10);} const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='asset-decomposition-board.png';a.click();toast('拆解板 PNG 已导出'); });
+    $('boardBtn').addEventListener('click',openBoard); $('closeBoard').addEventListener('click',()=> $('boardModal').classList.remove('open')); $('boardModal').addEventListener('click',e=>{if(e.target.id==='boardModal')$('boardModal').classList.remove('open')});
+    $('modes').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b)return; document.querySelectorAll('#modes button').forEach(x=>x.classList.remove('active')); b.classList.add('active'); currentMode=b.dataset.mode; });
+    document.querySelectorAll('nav button[data-view]').forEach(btn=>btn.addEventListener('click',()=>{ const view=btn.dataset.view; document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active')); btn.classList.add('active'); document.querySelector('.layout').style.display=view==='workspace'?'grid':'none'; document.querySelectorAll('.view-panel').forEach(x=>x.classList.remove('active')); const target=$(view+'View'); if(target) target.classList.add('active'); const titles={workspace:['游戏资产拆解台','识别、分层、抠图，再决定是否让 AI 补全。'],library:['项目资产库','集中查看已拆解、已审核和可导出的游戏资产。'],queue:['批处理队列','查看识图、分割和增强任务的处理状态。'],models:['模型与风格','管理视觉模型、图像模型和项目风格锁定。']}; $('titleText').textContent=titles[view][0]; $('subtitleText').textContent=titles[view][1]; if(view==='library'){ const n=currentAssets.length; $('libTotal').textContent=n; $('libCharacters').textContent=currentAssets.filter(a=>a.type==='角色').length; $('libReady').textContent=n; $('libraryRows').innerHTML=n?currentAssets.map(a=>`<div class="queue-row"><div><b>${a.name}</b><div class="asset-type">${a.type} · ${a.score}% confidence</div></div><span class="badge">READY</span></div>`).join(''):'<div class="empty">完成一次拆解后，资产会自动归档到这里</div>'; } }));
+    $('generate').addEventListener('click',async()=>{ if(!currentAssets.length){toast('请先完成智能拆解');return;} if(!imageData){toast('请重新上传原图后再增强');return;} const btn=$('generate'); const old=btn.textContent; btn.textContent='保真编辑中…'; btn.disabled=true; try { const r=await fetch('/api/image/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image_data:imageData,mode:currentMode,size:'1024x1024',quality:'low'})}); const data=await r.json(); if(!r.ok) throw new Error(data?.error?.message||'图像编辑请求失败'); const item=data.data?.[0]; generatedData=item?.b64_json?('data:image/png;base64,'+item.b64_json):item?.url||''; if(!generatedData) throw new Error('接口未返回可预览图片'); $('preview').src=generatedData; $('downloadBtn').style.display='inline-block'; $('stageHint').textContent='生成结果已缓存 · 可下载保存，原图仍可重新上传'; toast('保真编辑已返回，原图结构已锁定'); } catch(e) { toast(e.message||'图像编辑请求失败'); } finally { btn.textContent=old; btn.disabled=false; } });
+    $('downloadBtn').addEventListener('click',()=>{ if(!generatedData)return; const a=document.createElement('a'); a.href=generatedData; a.download='asset-lab-enhanced.png'; a.click(); });
+    $('clearBtn').addEventListener('click',()=>{ $('file').value=''; $('preview').removeAttribute('src'); $('preview').style.display='none'; $('placeholder').style.display='block'; imageData=''; generatedData=''; $('downloadBtn').style.display='none'; currentAssets=[]; $('objectCount').textContent='0 OBJECTS'; $('resolution').textContent='—'; $('stageHint').textContent='等待输入 · 可先使用示例策略预览'; renderAssets(); });
+    $('exportBtn').addEventListener('click',()=>{ if(!currentAssets.length){toast('暂无可导出的资产');return;} const payload={project:'Asset Lab',source:imageName||'demo-image',createdAt:new Date().toISOString(),assets:currentAssets.map(({name,type,score})=>({name,type,confidence:score/100})),enhanceMode:currentMode}; const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='asset-lab-manifest.json'; a.click(); URL.revokeObjectURL(a.href); toast('已导出资产清单 JSON'); });
+  </script>
+</body>
+</html>
