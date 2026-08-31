@@ -1,0 +1,4 @@
+-r requirements.txt
+torch>=2.3
+torchvision>=0.18
+git+https://github.com/facebookresearch/sam2.git
