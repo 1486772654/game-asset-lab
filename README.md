@@ -19,6 +19,19 @@
 - gpt-image-2 原图携带式编辑：保真增强、局部补全和创意变体。
 - 项目资产库、批处理队列、模型与风格页面。
 
+## 预览
+
+下面是角色原图、部件拆分板和角色设定图示例：
+
+<p align="center">
+  <img src="docs/previews/character-original.png" alt="角色原图示例" width="420" />
+  <img src="docs/previews/asset-split-board.png" alt="资产拆分板示例" width="420" />
+</p>
+
+<p align="center">
+  <img src="docs/previews/character-sheet.jpg" alt="角色设定图示例" width="420" />
+</p>
+
 ## 快速开始
 
 ### Windows 本地运行
@@ -107,3 +120,7 @@ python -m pip install -r requirements-sam2.txt
 ## 许可证
 
 本项目采用 [MIT License](LICENSE)。第三方模型和依赖按其各自许可证使用。
+
+## 联系方式
+
+作者邮箱：`1486772654@qq.com`
