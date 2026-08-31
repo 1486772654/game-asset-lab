@@ -1,0 +1,10 @@
+{
+  "base_url": "https://api.ej2075.com/v1",
+  "image_api_key": "在这里填入图像接口密钥",
+  "image_model": "gpt-image-2",
+  "vision_api_key": "在这里填入视觉/文本接口密钥",
+  "vision_model": "gpt-5.6",
+  "sam2_checkpoint": "models/sam2.1_hiera_small.pt",
+  "sam2_config": "configs/sam2.1/sam2.1_hiera_s.yaml",
+  "sam2_device": "cuda"
+}
