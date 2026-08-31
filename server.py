@@ -24,14 +24,14 @@ CONFIG_PATH = ROOT / "config.local.json"
 def load_config() -> dict:
     if not CONFIG_PATH.exists():
         return {}
-
-def sam2_status(cfg: dict) -> dict:
-    checkpoint = cfg.get("sam2_checkpoint", "")
-    return {"configured": bool(checkpoint and Path(checkpoint).is_file() and cfg.get("sam2_config")), "device": cfg.get("sam2_device", "cuda"), "fallback": "grabcut", "error": last_error()}
     try:
         return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {}
+
+def sam2_status(cfg: dict) -> dict:
+    checkpoint = cfg.get("sam2_checkpoint", "")
+    return {"configured": bool(checkpoint and Path(checkpoint).is_file() and cfg.get("sam2_config")), "device": cfg.get("sam2_device", "cuda"), "fallback": "grabcut", "error": last_error()}
 
 
 def upstream(path: str, payload: dict, api_key: str, base_url: str) -> tuple[int, bytes]:
